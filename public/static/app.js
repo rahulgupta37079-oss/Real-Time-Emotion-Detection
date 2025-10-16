@@ -18,15 +18,15 @@ class EmotionDetector {
       lastAlertTime: 0
     };
     
-    // Emotion categories matching VoiceShield
+    // Emotion categories with professional black/yellow/white theme
     this.emotions = [
-      { name: 'Neutral', value: 0, color: 'gray', icon: 'fa-meh' },
-      { name: 'Happy', value: 0, color: 'yellow', icon: 'fa-smile' },
-      { name: 'Sad', value: 0, color: 'blue', icon: 'fa-frown' },
-      { name: 'Angry', value: 0, color: 'red', icon: 'fa-angry' },
-      { name: 'Fearful', value: 0, color: 'purple', icon: 'fa-grimace' },
-      { name: 'Disgusted', value: 0, color: 'green', icon: 'fa-tired' },
-      { name: 'Surprised', value: 0, color: 'pink', icon: 'fa-surprise' }
+      { name: 'Neutral', value: 0, color: '#9CA3AF', barColor: 'from-gray-400 to-gray-500', icon: 'fa-meh' },
+      { name: 'Happy', value: 0, color: '#FDB813', barColor: 'from-yellow-400 to-yellow-500', icon: 'fa-smile' },
+      { name: 'Sad', value: 0, color: '#60A5FA', barColor: 'from-blue-400 to-blue-500', icon: 'fa-frown' },
+      { name: 'Angry', value: 0, color: '#EF4444', barColor: 'from-red-500 to-red-600', icon: 'fa-angry' },
+      { name: 'Fearful', value: 0, color: '#A78BFA', barColor: 'from-purple-400 to-purple-500', icon: 'fa-grimace' },
+      { name: 'Disgusted', value: 0, color: '#34D399', barColor: 'from-green-400 to-green-500', icon: 'fa-tired' },
+      { name: 'Surprised', value: 0, color: '#F472B6', barColor: 'from-pink-400 to-pink-500', icon: 'fa-surprise' }
     ];
     
     this.initializeUI();
@@ -43,16 +43,18 @@ class EmotionDetector {
   renderEmotionBars() {
     const container = document.getElementById('emotionBars');
     container.innerHTML = this.emotions.map(emotion => `
-      <div class="emotion-item">
-        <div class="flex items-center justify-between mb-2">
-          <div class="flex items-center space-x-2">
-            <i class="fas ${emotion.icon} text-${emotion.color}-400"></i>
-            <span class="font-semibold">${emotion.name}</span>
+      <div class="emotion-item p-3 bg-black/30 rounded-lg hover:bg-black/50 transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: ${emotion.color}20">
+              <i class="fas ${emotion.icon}" style="color: ${emotion.color}"></i>
+            </div>
+            <span class="font-bold text-white">${emotion.name}</span>
           </div>
-          <span class="text-sm font-bold text-${emotion.color}-400" id="${emotion.name.toLowerCase()}-value">0%</span>
+          <span class="text-xl font-display font-black" style="color: ${emotion.color}" id="${emotion.name.toLowerCase()}-value">0%</span>
         </div>
-        <div class="h-3 bg-gray-700 rounded-full overflow-hidden">
-          <div id="${emotion.name.toLowerCase()}-bar" class="h-full bg-gradient-to-r from-${emotion.color}-400 to-${emotion.color}-600 emotion-bar transition-all duration-500" style="width: 0%"></div>
+        <div class="h-2 bg-black rounded-full overflow-hidden">
+          <div id="${emotion.name.toLowerCase()}-bar" class="h-full bg-gradient-to-r ${emotion.barColor} emotion-bar transition-all duration-500" style="width: 0%"></div>
         </div>
       </div>
     `).join('');
@@ -210,16 +212,16 @@ class EmotionDetector {
     const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
     const normalizedVolume = Math.min(100, (average / 255) * 100);
     
-    // Update audio bars
+    // Update audio bars with yellow theme
     const bars = 5;
     for (let i = 1; i <= bars; i++) {
       const bar = document.getElementById(`audioBar${i}`);
-      if (i * 20 < normalizedVolume) {
-        bar.classList.remove('bg-gray-600');
-        bar.classList.add('bg-green-400');
-      } else {
-        bar.classList.remove('bg-green-400');
-        bar.classList.add('bg-gray-600');
+      if (bar) {
+        if (i * 20 < normalizedVolume) {
+          bar.style.backgroundColor = '#FDB813';
+        } else {
+          bar.style.backgroundColor = '#3A3A3A';
+        }
       }
     }
     
@@ -322,13 +324,16 @@ class EmotionDetector {
   
   showAngerAlert(angerLevel) {
     const alertDiv = document.createElement('div');
-    alertDiv.className = 'fixed top-20 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-2xl z-50 animate-bounce';
+    alertDiv.className = 'fixed top-20 right-4 px-6 py-4 rounded-xl shadow-2xl z-50 animate-bounce border-l-4';
+    alertDiv.style.cssText = 'background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%); border-left-color: #FDB813; border-width: 4px;';
     alertDiv.innerHTML = `
-      <div class="flex items-center space-x-3">
-        <i class="fas fa-exclamation-triangle text-3xl"></i>
+      <div class="flex items-center space-x-4">
+        <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+        </div>
         <div>
-          <div class="font-bold text-lg">⚠️ Anger Alert!</div>
-          <div class="text-sm">Anger Level: ${Math.round(angerLevel * 100)}%</div>
+          <div class="font-display font-black text-lg text-white mb-1">⚠️ Anger Detected!</div>
+          <div class="text-sm text-gray-400">Anger Level: <span class="text-passion-yellow font-bold">${Math.round(angerLevel * 100)}%</span></div>
         </div>
       </div>
     `;
@@ -337,7 +342,10 @@ class EmotionDetector {
     
     // Auto-remove after 10 seconds
     setTimeout(() => {
-      alertDiv.remove();
+      alertDiv.style.opacity = '0';
+      alertDiv.style.transform = 'translateX(100%)';
+      alertDiv.style.transition = 'all 0.5s ease';
+      setTimeout(() => alertDiv.remove(), 500);
     }, 10000);
     
     // Log alert
@@ -377,8 +385,7 @@ class EmotionDetector {
     for (let i = 1; i <= 5; i++) {
       const bar = document.getElementById(`audioBar${i}`);
       if (bar) {
-        bar.classList.remove('bg-green-400');
-        bar.classList.add('bg-gray-600');
+        bar.style.backgroundColor = '#3A3A3A';
       }
     }
   }
@@ -386,34 +393,22 @@ class EmotionDetector {
   updateStatus(status, text) {
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
-    const statusBadge = document.getElementById('statusBadge');
     
     statusText.textContent = text;
     
+    // Use inline styles for better control
     switch (status) {
       case 'connected':
-        statusDot.classList.remove('bg-gray-500', 'bg-yellow-500', 'bg-red-500');
-        statusDot.classList.add('bg-green-500');
-        statusBadge.classList.remove('bg-gray-800/80', 'bg-yellow-800/80', 'bg-red-800/80');
-        statusBadge.classList.add('bg-green-800/80');
+        statusDot.style.backgroundColor = '#10B981'; // green
         break;
       case 'connecting':
-        statusDot.classList.remove('bg-gray-500', 'bg-green-500', 'bg-red-500');
-        statusDot.classList.add('bg-yellow-500');
-        statusBadge.classList.remove('bg-gray-800/80', 'bg-green-800/80', 'bg-red-800/80');
-        statusBadge.classList.add('bg-yellow-800/80');
+        statusDot.style.backgroundColor = '#FDB813'; // passion yellow
         break;
       case 'error':
-        statusDot.classList.remove('bg-gray-500', 'bg-green-500', 'bg-yellow-500');
-        statusDot.classList.add('bg-red-500');
-        statusBadge.classList.remove('bg-gray-800/80', 'bg-green-800/80', 'bg-yellow-800/80');
-        statusBadge.classList.add('bg-red-800/80');
+        statusDot.style.backgroundColor = '#EF4444'; // red
         break;
       default:
-        statusDot.classList.remove('bg-green-500', 'bg-yellow-500', 'bg-red-500');
-        statusDot.classList.add('bg-gray-500');
-        statusBadge.classList.remove('bg-green-800/80', 'bg-yellow-800/80', 'bg-red-800/80');
-        statusBadge.classList.add('bg-gray-800/80');
+        statusDot.style.backgroundColor = '#6B7280'; // gray
     }
   }
 }
