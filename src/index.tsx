@@ -241,10 +241,37 @@ app.get('/', (c) => {
             </div>
         </div>
 
+        <!-- Load face-api.js for real emotion detection -->
+        <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
         <script src="/static/app.js"></script>
     </body>
     </html>
   `)
+})
+
+// API endpoint for anger alert configuration
+app.get('/api/anger_alert/config', (c) => {
+  return c.json({
+    threshold: 0.6,
+    cooldown: 30,
+    enabled: true,
+    popup_duration: 10
+  })
+})
+
+app.post('/api/anger_alert/config', async (c) => {
+  const body = await c.req.json()
+  // In a real app, you'd save this to KV storage
+  return c.json({ success: true, config: body })
+})
+
+app.get('/api/status', (c) => {
+  return c.json({
+    running: true,
+    model_loaded: true,
+    camera_active: false,
+    audio_active: false
+  })
 })
 
 export default app
