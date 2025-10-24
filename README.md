@@ -2,9 +2,10 @@
 
 > **Professional AI-powered emotion detection system with a modern black, yellow, and white design**
 
-[![Live Demo](https://img.shields.io/badge/Demo-Live-yellow?style=for-the-badge&logo=cloudflare)](https://3000-i0rqut8xstjuaa3txxbke-a402f90a.sandbox.novita.ai)
+[![Live Demo](https://img.shields.io/badge/🚀_Production-Live-yellow?style=for-the-badge&logo=cloudflare)](https://passionbots-emotion-detection.pages.dev)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/rahulgupta37079-oss/Real-Time-Emotion-Detection)
 [![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-AI-orange?style=for-the-badge&logo=tensorflow)](https://www.tensorflow.org/js)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-yellow?style=for-the-badge&logo=cloudflare)](https://passionbots-emotion-detection.pages.dev)
 
 ---
 
@@ -55,6 +56,23 @@ Neutral Colors:
 - **Buttons**: Yellow gradient with smooth transitions
 - **Animations**: Gradient text shine, pulse effects, smooth transitions
 - **Icons**: Colored backgrounds matching brand colors
+
+---
+
+## 🌐 Live Production
+
+**🚀 Official Deployment:** [https://passionbots-emotion-detection.pages.dev](https://passionbots-emotion-detection.pages.dev)
+
+The application is deployed on **Cloudflare Pages** with global edge distribution for lightning-fast performance worldwide.
+
+### Deployment Details
+- **Platform**: Cloudflare Pages
+- **Status**: ✅ Live & Active
+- **URL**: https://passionbots-emotion-detection.pages.dev
+- **Build**: Automatic from `main` branch
+- **Edge Locations**: 310+ cities worldwide
+- **SSL/TLS**: Automatic HTTPS
+- **Performance**: Sub-second response times globally
 
 ---
 
@@ -373,7 +391,7 @@ This project is created for educational and demonstration purposes.
 
 - **GitHub**: [rahulgupta37079-oss](https://github.com/rahulgupta37079-oss)
 - **Repository**: [Real-Time-Emotion-Detection](https://github.com/rahulgupta37079-oss/Real-Time-Emotion-Detection)
-- **Live Demo**: [PassionBots Sandbox](https://3000-i0rqut8xstjuaa3txxbke-a402f90a.sandbox.novita.ai)
+- **🚀 Live Production**: [passionbots-emotion-detection.pages.dev](https://passionbots-emotion-detection.pages.dev)
 
 ---
 
