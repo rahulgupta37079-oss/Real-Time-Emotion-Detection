@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassionBots Emotion Detection - Advanced AI System</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0A0A0A">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PassionBots">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎭</text></svg>">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'passion-black': '#0A0A0A',
+                        'passion-yellow': '#FDB813',
+                        'passion-dark': '#1A1A1A',
+                        'passion-gray': '#2A2A2A'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0A0A0A;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .card-professional {
+            background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
+            border: 1px solid #3A3A3A;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .card-professional:hover {
+            border-color: #FDB813;
+            box-shadow: 0 15px 40px rgba(253, 184, 19, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .emotion-bar {
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #FDB813 0%, #FFA500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #FDB813 0%, #FFA500 100%);
+            color: #0A0A0A;
+            font-weight: 800;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 8px 20px rgba(253, 184, 19, 0.4);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(253, 184, 19, 0.6);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            border: 2px solid #FDB813;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: #FDB813;
+            color: #0A0A0A;
+        }
+        
+        #videoElement {
+            border: 4px solid #3A3A3A;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            transition: all 0.3s ease;
+        }
+        
+        #videoElement.recording {
+            border-color: #FDB813;
+            box-shadow: 0 0 0 4px rgba(253, 184, 19, 0.2), 0 20px 60px rgba(253, 184, 19, 0.4);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6B7280;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #3A3A3A;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #FDB813;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(253, 184, 19, 0.5);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #FDB813;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(253, 184, 19, 0.5);
+            border: none;
+        }
+        
+        .toggle-checkbox:checked {
+            background-color: #FDB813;
+            border-color: #FDB813;
+        }
+        
+        .toggle-checkbox {
+            width: 48px;
+            height: 24px;
+            background-color: #3A3A3A;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid #3A3A3A;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-checkbox::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            top: 1px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-checkbox:checked::after {
+            left: 24px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .btn-primary {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-passion-black/80 backdrop-blur-lg border-b border-passion-gray">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-passion-yellow to-orange-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-brain text-passion-black text-lg"></i>
+                </div>
+                <span class="font-display font-black text-xl">PassionBots</span>
+            </div>
+            
+            <div class="flex items-center space-x-6">
+                <a href="#features" class="hidden md:block text-gray-300 hover:text-passion-yellow transition-colors" data-i18n="nav_features">Features</a>
+                <a href="#about" class="hidden md:block text-gray-300 hover:text-passion-yellow transition-colors" data-i18n="nav_about">About</a>
+                <select id="languageSelect" class="bg-passion-gray text-white px-3 py-2 rounded-lg border border-passion-gray focus:border-passion-yellow outline-none cursor-pointer">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="hi">🇮🇳 हिंदी</option>
+                    <option value="zh">🇨🇳 中文</option>
+                </select>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 pt-24 pb-12">
+        <!-- Hero Section -->
+        <div class="text-center mb-12">
+            <div class="inline-block px-4 py-2 bg-passion-yellow/10 border border-passion-yellow/30 rounded-full mb-4">
+                <span class="text-passion-yellow font-bold text-sm" data-i18n="hero_badge">AI-Powered Technology</span>
+            </div>
+            <h1 class="font-display font-black text-4xl md:text-6xl mb-4 gradient-text" data-i18n="hero_title">Real-Time Emotion Detection</h1>
+            <p class="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto" data-i18n="hero_subtitle">Advanced multi-modal AI system analyzing facial expressions and voice patterns with state-of-the-art machine learning models</p>
+        </div>
+        
+        <!-- Main Grid -->
+        <div class="grid lg:grid-cols-3 gap-6 mb-8">
+            <!-- Video Feed Column -->
+            <div class="lg:col-span-2">
+                <div class="card-professional rounded-2xl p-6 mb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="font-display font-bold text-2xl">Live Video Feed</h2>
+                        <div class="status-indicator">
+                            <div id="statusDot" class="status-dot"></div>
+                            <span id="statusText" class="text-sm text-gray-400">Disconnected</span>
+                        </div>
+                    </div>
+                    
+                    <div class="relative aspect-video bg-passion-dark rounded-xl overflow-hidden mb-4">
+                        <video id="videoElement" class="hidden w-full h-full object-cover" autoplay playsinline></video>
+                        <div id="videoPlaceholder" class="w-full h-full flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fas fa-video text-6xl text-gray-600 mb-4"></i>
+                                <p class="text-gray-500" data-i18n="btn_start">Click Start to Begin</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Permission Alert -->
+                    <div id="permissionAlert" class="hidden bg-passion-yellow/10 border border-passion-yellow/30 rounded-xl p-4 mb-4">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-info-circle text-passion-yellow"></i>
+                            <p class="text-sm" data-i18n="permission_camera_mic">Please grant camera and microphone access to begin emotion detection</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Control Buttons -->
+                    <div class="flex flex-wrap gap-3">
+                        <button id="startBtn" class="btn-primary">
+                            <i class="fas fa-play mr-2"></i>
+                            <span data-i18n="btn_start">Start Detection</span>
+                        </button>
+                        <button id="stopBtn" class="hidden btn-primary bg-red-500">
+                            <i class="fas fa-stop mr-2"></i>
+                            <span data-i18n="btn_stop">Stop</span>
+                        </button>
+                        <button id="configBtn" class="btn-secondary">
+                            <i class="fas fa-cog mr-2"></i>
+                            <span data-i18n="btn_configure">Configure Alerts</span>
+                        </button>
+                        <button id="exportBtn" class="btn-secondary">
+                            <i class="fas fa-download mr-2"></i>
+                            <span data-i18n="btn_export">Export Data</span>
+                        </button>
+                        <button id="clearHistoryBtn" class="btn-secondary text-red-400 border-red-400 hover:bg-red-500 hover:text-white">
+                            <i class="fas fa-trash mr-2"></i>
+                            <span data-i18n="btn_clear_history">Clear History</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Emotion Analysis -->
+                <div class="card-professional rounded-2xl p-6">
+                    <h2 class="font-display font-bold text-2xl mb-6">Emotion Analysis</h2>
+                    <div id="emotionBars" class="grid md:grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+            
+            <!-- Sidebar Column -->
+            <div class="space-y-6">
+                <!-- Scores Card -->
+                <div class="card-professional rounded-2xl p-6">
+                    <h2 class="font-display font-bold text-xl mb-6" data-i18n="score_combined">Combined Score</h2>
+                    
+                    <!-- Combined Score -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-400 text-sm">Overall</span>
+                            <span id="combinedScore" class="font-display font-black text-4xl gradient-text">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Facial Score -->
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-400 text-sm" data-i18n="score_facial">Facial Score</span>
+                            <span id="facialScore" class="font-bold text-passion-yellow">0%</span>
+                        </div>
+                        <div class="h-2 bg-black rounded-full overflow-hidden">
+                            <div id="facialScoreBar" class="h-full bg-gradient-to-r from-yellow-400 to-yellow-500 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Voice Score -->
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-400 text-sm" data-i18n="score_voice">Voice Score</span>
+                            <span id="voiceScore" class="font-bold text-passion-yellow">0%</span>
+                        </div>
+                        <div class="h-2 bg-black rounded-full overflow-hidden">
+                            <div id="voiceScoreBar" class="h-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Visualizer -->
+                    <div class="mt-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-gray-400 text-sm">Audio Level</span>
+                            <i class="fas fa-microphone text-passion-yellow"></i>
+                        </div>
+                        <div class="flex justify-around items-end h-16 bg-black/50 rounded-lg p-2">
+                            <div id="audioBar1" class="w-2 bg-gray-700 rounded-t transition-all duration-100" style="height: 20%"></div>
+                            <div id="audioBar2" class="w-2 bg-gray-700 rounded-t transition-all duration-100" style="height: 40%"></div>
+                            <div id="audioBar3" class="w-2 bg-gray-700 rounded-t transition-all duration-100" style="height: 60%"></div>
+                            <div id="audioBar4" class="w-2 bg-gray-700 rounded-t transition-all duration-100" style="height: 40%"></div>
+                            <div id="audioBar5" class="w-2 bg-gray-700 rounded-t transition-all duration-100" style="height: 20%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status -->
+                <div class="card-professional rounded-2xl p-6">
+                    <h2 class="font-display font-bold text-xl mb-4" data-i18n="status_title">System Status</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 text-sm" data-i18n="status_camera">Camera</span>
+                            <span id="cameraStatus" class="text-sm font-bold text-gray-500" data-i18n="status_inactive">Inactive</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 text-sm" data-i18n="status_microphone">Microphone</span>
+                            <span id="micStatus" class="text-sm font-bold text-gray-500" data-i18n="status_inactive">Inactive</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 text-sm" data-i18n="status_model">AI Model</span>
+                            <span id="modelStatus" class="text-sm font-bold text-gray-500" data-i18n="status_not_loaded">Not Loaded</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400 text-sm">Faces Detected</span>
+                            <span id="faceCount" class="text-sm font-bold text-passion-yellow">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Session History -->
+                <div class="card-professional rounded-2xl p-6">
+                    <h2 class="font-display font-bold text-xl mb-4" data-i18n="history_title">Session History</h2>
+                    <div id="historyContainer" class="max-h-96 overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div id="features" class="mb-16">
+            <h2 class="font-display font-black text-3xl text-center mb-12">Key Features</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="card-professional rounded-2xl p-6 text-center">
+                    <div class="w-16 h-16 bg-passion-yellow/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-passion-yellow text-2xl"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-2" data-i18n="feature_privacy_title">Privacy First</h3>
+                    <p class="text-gray-400 text-sm" data-i18n="feature_privacy_desc">All processing happens locally in your browser. Zero data transmission or storage.</p>
+                </div>
+                
+                <div class="card-professional rounded-2xl p-6 text-center">
+                    <div class="w-16 h-16 bg-passion-yellow/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bolt text-passion-yellow text-2xl"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-2" data-i18n="feature_fast_title">Lightning Fast</h3>
+                    <p class="text-gray-400 text-sm" data-i18n="feature_fast_desc">Real-time emotion detection at 10 FPS. Powered by TensorFlow.js for instant results.</p>
+                </div>
+                
+                <div class="card-professional rounded-2xl p-6 text-center">
+                    <div class="w-16 h-16 bg-passion-yellow/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-robot text-passion-yellow text-2xl"></i>
+                    </div>
+                    <h3 class="font-display font-bold text-xl mb-2" data-i18n="feature_ai_title">Multi-Modal AI</h3>
+                    <p class="text-gray-400 text-sm" data-i18n="feature_ai_desc">Advanced fusion of facial expression and voice analysis for comprehensive detection.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- About Section -->
+        <div id="about" class="card-professional rounded-2xl p-8 text-center">
+            <h2 class="font-display font-black text-3xl mb-4" data-i18n="about_title">About PassionBots Emotion Detection</h2>
+            <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="about_desc">PassionBots is a cutting-edge emotion detection platform that combines state-of-the-art machine learning with intuitive design. Our system analyzes both facial expressions and voice patterns to provide comprehensive emotion insights in real-time.</p>
+        </div>
+    </div>
+    
+    <!-- Alert Configuration Modal -->
+    <div id="configModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay">
+        <div class="card-professional rounded-2xl p-8 max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-display font-bold text-2xl" data-i18n="alert_config_title">Alert Configuration</h2>
+                <button onclick="detectorInstance.hideConfigModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Anger Threshold -->
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2" data-i18n="alert_threshold">Anger Threshold</label>
+                <input type="range" id="thresholdSlider" min="30" max="90" value="60" class="slider w-full">
+                <div class="flex justify-between text-sm text-gray-400 mt-1">
+                    <span>30%</span>
+                    <span id="thresholdValue" class="text-passion-yellow font-bold">60%</span>
+                    <span>90%</span>
+                </div>
+            </div>
+            
+            <!-- Cooldown Period -->
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2" data-i18n="alert_cooldown">Cooldown Period</label>
+                <input type="range" id="cooldownSlider" min="10" max="120" value="30" class="slider w-full">
+                <div class="flex justify-between text-sm text-gray-400 mt-1">
+                    <span>10s</span>
+                    <span id="cooldownValue" class="text-passion-yellow font-bold">30s</span>
+                    <span>120s</span>
+                </div>
+            </div>
+            
+            <!-- Enable Alerts Toggle -->
+            <div class="mb-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-300" data-i18n="alert_enable">Enable Alerts</span>
+                    <input type="checkbox" id="enableAlerts" class="toggle-checkbox" checked>
+                </div>
+            </div>
+            
+            <!-- Sound Notifications Toggle -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-300" data-i18n="alert_sound">Sound Notifications</span>
+                    <input type="checkbox" id="soundEnabled" class="toggle-checkbox" checked>
+                </div>
+            </div>
+            
+            <!-- Save Button -->
+            <button onclick="detectorInstance.saveConfig()" class="btn-primary w-full">
+                <i class="fas fa-save mr-2"></i>
+                <span data-i18n="alert_save">Save Configuration</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="border-t border-passion-gray py-8 text-center text-gray-400">
+        <p class="text-sm">© 2025 PassionBots Emotion Detection. All rights reserved.</p>
+        <p class="text-xs mt-2">Powered by TensorFlow.js & Face-API.js</p>
+    </footer>
+    
+    <!-- Load Scripts -->
+    <script src="translations.js"></script>
+    <script src="app-enhanced.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => console.log('✅ Service Worker registered'))
+                    .catch(error => console.log('❌ Service Worker registration failed:', error));
+            });
+        }
+    </script>
+</body>
+</html>
