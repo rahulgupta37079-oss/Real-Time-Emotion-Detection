@@ -145,11 +145,81 @@ class EmotionDetector {
     } catch (error) {
       console.error('Error accessing media devices:', error);
       this.updateStatus('error', 'Permission Denied');
-      document.getElementById('permissionAlert').innerHTML = `
-        <i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>
-        <span class="text-red-200">Error: ${error.message}. Please ensure camera and microphone permissions are granted.</span>
-      `;
+      
+      // Show detailed error message
+      let errorHTML = '<div class="flex items-start space-x-3"><i class="fas fa-exclamation-triangle text-passion-yellow text-xl"></i><div>';
+      
+      if (error.name === 'NotAllowedError') {
+        errorHTML += '<p class="font-bold text-white mb-2">⚠️ Camera/Microphone Access Blocked</p>';
+        errorHTML += '<p class="text-sm text-gray-300 mb-2">You blocked the permissions. To fix this:</p>';
+        errorHTML += '<ol class="text-sm text-gray-400 list-decimal ml-5 space-y-1">';
+        errorHTML += '<li>Click the 🔒 lock icon in your browser\'s address bar</li>';
+        errorHTML += '<li>Find "Camera" and "Microphone" settings</li>';
+        errorHTML += '<li>Change both to "Allow"</li>';
+        errorHTML += '<li>Reload this page and click Start Detection again</li>';
+        errorHTML += '</ol>';
+      } else if (error.name === 'NotFoundError') {
+        errorHTML += '<p class="font-bold text-white mb-2">⚠️ No Camera or Microphone Found</p>';
+        errorHTML += '<p class="text-sm text-gray-300">Please connect a camera and microphone to your device and try again.</p>';
+      } else if (error.name === 'NotReadableError') {
+        errorHTML += '<p class="font-bold text-white mb-2">⚠️ Camera/Microphone Already in Use</p>';
+        errorHTML += '<p class="text-sm text-gray-300">Close other applications using your camera/microphone (Zoom, Teams, Skype, etc.) and try again.</p>';
+      } else if (error.name === 'OverconstrainedError') {
+        errorHTML += '<p class="font-bold text-white mb-2">⚠️ Camera Resolution Not Supported</p>';
+        errorHTML += '<p class="text-sm text-gray-300">Retrying with default settings...</p>';
+        this.startWithDefaultSettings();
+        return;
+      } else {
+        errorHTML += '<p class="font-bold text-white mb-2">⚠️ Permission Error</p>';
+        errorHTML += '<p class="text-sm text-gray-300">' + error.message + '</p>';
+        errorHTML += '<p class="text-sm text-gray-400 mt-2">Please check your browser settings and ensure camera/microphone access is allowed.</p>';
+      }
+      
+      errorHTML += '</div></div>';
+      document.getElementById('permissionAlert').innerHTML = errorHTML;
       document.getElementById('permissionAlert').classList.remove('hidden');
+    }
+  }
+  
+  async startWithDefaultSettings() {
+    try {
+      this.videoStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
+      
+      const videoElement = document.getElementById('videoElement');
+      const videoPlaceholder = document.getElementById('videoPlaceholder');
+      videoElement.srcObject = this.videoStream;
+      
+      await new Promise((resolve) => {
+        videoElement.onloadedmetadata = () => {
+          videoElement.play();
+          resolve();
+        };
+      });
+      
+      videoElement.classList.remove('hidden');
+      videoPlaceholder.classList.add('hidden');
+      
+      this.setupAudioAnalysis(this.videoStream);
+      
+      this.isRunning = true;
+      this.updateStatus('connected', 'Detection Active');
+      document.getElementById('permissionAlert').classList.add('hidden');
+      document.getElementById('startBtn').classList.add('hidden');
+      document.getElementById('stopBtn').classList.remove('hidden');
+      document.getElementById('cameraStatus').textContent = 'Active';
+      document.getElementById('micStatus').textContent = 'Active';
+      
+      videoElement.classList.add('recording');
+      
+      this.startRealTimeDetection();
+      
+    } catch (error) {
+      console.error('Error with default settings:', error);
+      this.updateStatus('error', 'Permission Denied');
+      alert('Unable to access camera/microphone. Please check permissions in your browser settings and try again.');
     }
   }
   

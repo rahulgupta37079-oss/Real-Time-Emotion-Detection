@@ -275,6 +275,51 @@ class EnhancedEmotionDetector {
     
     // Initialize alert config UI
     this.initAlertConfigUI();
+    
+    // Check permissions on load
+    this.checkPermissions();
+  }
+  
+  async checkPermissions() {
+    try {
+      // Check if permissions API is available
+      if (navigator.permissions) {
+        const cameraPermission = await navigator.permissions.query({ name: 'camera' });
+        const micPermission = await navigator.permissions.query({ name: 'microphone' });
+        
+        console.log('Camera permission:', cameraPermission.state);
+        console.log('Microphone permission:', micPermission.state);
+        
+        if (cameraPermission.state === 'denied' || micPermission.state === 'denied') {
+          this.showPermissionHelp();
+        }
+      }
+    } catch (error) {
+      // Permissions API not fully supported, will handle on getUserMedia
+      console.log('Permissions API not available:', error);
+    }
+  }
+  
+  showPermissionHelp() {
+    const alertDiv = document.getElementById('permissionAlert');
+    if (alertDiv) {
+      alertDiv.classList.remove('hidden');
+      alertDiv.innerHTML = `
+        <div class="flex items-start space-x-3">
+          <i class="fas fa-exclamation-triangle text-passion-yellow text-xl"></i>
+          <div>
+            <p class="font-bold text-white mb-2">⚠️ Camera/Microphone Access Blocked</p>
+            <p class="text-sm text-gray-300 mb-2">To use emotion detection, you need to allow camera and microphone access.</p>
+            <ol class="text-sm text-gray-400 list-decimal ml-5 space-y-1">
+              <li>Click the 🔒 lock icon in your browser's address bar</li>
+              <li>Find "Camera" and "Microphone" settings</li>
+              <li>Change both to "Allow"</li>
+              <li>Reload this page and try again</li>
+            </ol>
+          </div>
+        </div>
+      `;
+    }
   }
   
   initAlertConfigUI() {
@@ -463,6 +508,77 @@ class EnhancedEmotionDetector {
     } catch (error) {
       console.error('Error accessing media devices:', error);
       this.updateStatus('error', 'Permission Denied');
+      
+      // Show detailed error message
+      let errorMessage = 'Camera and microphone access denied.\n\n';
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage += 'You blocked the permissions.\n\nTo fix:\n';
+        errorMessage += '1. Click the 🔒 lock icon in your address bar\n';
+        errorMessage += '2. Allow Camera and Microphone\n';
+        errorMessage += '3. Reload the page and try again';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage += 'No camera or microphone found.\n\nPlease connect a camera and microphone and try again.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage += 'Camera/microphone is already in use by another application.\n\nClose other apps using your camera/mic and try again.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage += 'Camera resolution not supported.\n\nTrying with default settings...';
+        // Retry with default settings
+        setTimeout(() => this.startWithDefaultSettings(), 1000);
+        return;
+      } else {
+        errorMessage += 'Error: ' + error.message + '\n\nPlease check your browser settings.';
+      }
+      
+      alert(errorMessage);
+      document.getElementById('permissionAlert').classList.add('hidden');
+    }
+  }
+  
+  async startWithDefaultSettings() {
+    try {
+      this.videoStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+      });
+      
+      const videoElement = document.getElementById('videoElement');
+      const videoPlaceholder = document.getElementById('videoPlaceholder');
+      videoElement.srcObject = this.videoStream;
+      
+      await new Promise((resolve) => {
+        videoElement.onloadedmetadata = () => {
+          videoElement.play();
+          resolve();
+        };
+      });
+      
+      videoElement.classList.remove('hidden');
+      videoPlaceholder.classList.add('hidden');
+      
+      // Setup voice classifier
+      this.voiceClassifier.setup(this.videoStream);
+      
+      this.isRunning = true;
+      this.updateStatus('connected', 'Detection Active');
+      document.getElementById('permissionAlert').classList.add('hidden');
+      document.getElementById('startBtn').classList.add('hidden');
+      document.getElementById('stopBtn').classList.remove('hidden');
+      document.getElementById('cameraStatus').textContent = t('status_active', this.currentLanguage);
+      document.getElementById('micStatus').textContent = t('status_active', this.currentLanguage);
+      
+      videoElement.classList.add('recording');
+      
+      // Start session
+      this.historyManager.startSession();
+      
+      this.startRealTimeDetection();
+      this.animateAudioBars();
+      
+    } catch (error) {
+      console.error('Error with default settings:', error);
+      this.updateStatus('error', 'Permission Denied');
+      alert('Unable to access camera/microphone. Please check permissions and try again.');
     }
   }
   
